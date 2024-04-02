@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb
+    # this label is for service definition ClusterIP file. Service will route to any pod with this label
+    # this is for the db service
+
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vprodb
+    spec:
+      containers:
+        - name: vprodb
+          image: vprofile/vprofiledb:V1
+          # use the image on docker hub vprofile/vprofiledb:V1
+            
+          # USE an initContainer (bottom, below) instead for the removal of the lost+found directory on the volumne
+          # args:
+          #   - "--ignore-db-dir=lost+found"
+
+          # map the volume defined at bottom below to this db container pod
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+            # the volume will be mounted to this directory path on the db container
+              name: vpro-db-data
+              # name is below
+          ports:
+            - name: vprodb-port
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  # this is the kubectl secret that we created with encoded
+                  # values of the passwords with the app-secret.yaml
+                  # The name in that file is app-secret. The data is dbpass
+                  key: db-pass
+                  # This value for the db password will then be passed to the env var MYSQL_ROOT_PASSWORD
+
+                  # Next, need to map the volume block store that we created to this db container
+                  # They are in same zone us-east-1a
+        
+      nodeSelector:
+        zone: us-east-1a
+        # we created labels for the 2 nodes in the kops cluser: us-east-1a and us-east-1b
+        # This nodeSelector will ensure that this db container runs on this us-east-1a node
+        # this will ensure that the db container is in the same zone as the volume block store that it is using
+        # The volume block store was manually created in us-east-1a
+
+      volumes:
+      # attach this volume to this db container defined above
+        - name: vpro-db-data
+          awsElasticBlockStore:
+            volumeID: vol-0b308063deec65e5e
+            # the volume id is from AWS cli when we created the volume
+            # this is vol-0b308063deec65e5e
+            fsType: ext4
+            # to attach to the volume in k8s we need to tag the AWS volume
+            # We can do this through aws cli or through the web console.
+            # the tag must use ClusterName as key and the name of the kops clustser as the value
+            # Without the tag will get a permissions denied error
+            # Map the volume to the pod above wiht the volumenMounts (see above)
+            # Note with ext4 fsType there will be a lost+found diretory created by linux
+            # this will be a problem when the db container tries to mount this volume and map it.
+            # Must either ignore the folder or before mysql starts delete the folder
+            # To ignore pass args tp the container.(see above)  This only works with mysql 5 not with 8
+            # Better to do an init container that starts on the pod prior to the db container. This will remove the folder prior to the db container starting
+            # on the pod.
+      initContainers:
+      # once the initContainer removes the folder below it will exit and the db container will come up and
+      # mount the same volume, but with no lost+found folder
+        - name: busybox
+          # name can be anything
+          image: busybox:latest
+          args: ["rm", "-rf", "/var/lib/mysql/lost+found"]
+          # this arg will remove the folder lost+found from the mounted directory 
+          # we will mount the volume to this  lightweight container to perform the deletion
+          volumeMounts:
+            - name: vpro-db-data
+              mountPath: /var/lib/mysql
+              # the volume will be mounted to this directory path on the db container
