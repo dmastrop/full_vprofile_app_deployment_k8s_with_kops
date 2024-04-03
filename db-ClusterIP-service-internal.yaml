@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+# base this on the applications.properties file in the source code
+metadata:
+  name: vprodb
+  # vprodb is the name in the mysql URL in the application.properties file. 3306 is the port.
+spec:
+  ports:
+    - port: 3306
+      targetPort: vprodb-port
+      # name of the port in the deployment yaml is vprodb-port
+      protocol: TCP
+  selector:
+    app: vprodb
+    # this is the template label of the vprodb app in the deployment yaml file.
