@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vprocache01
+  # this is the memcached.active.host=vprocache01 in application.properties file
+spec:
+  selector:
+    app: vpromc
+    # this is the template pod label in the deployment yaml
+  type: ClusterIP
+  ports:
+  - port: 11211
+    targetPort: vpromc-port
+    # this is the port in the memcached deployment yaml
+    protocol: TCP

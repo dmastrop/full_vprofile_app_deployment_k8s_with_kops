@@ -33,6 +33,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: app-secret
+                  # this is from the app-secret.yaml
                   key: db-pass
         
       nodeSelector:

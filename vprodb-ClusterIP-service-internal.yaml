@@ -13,3 +13,4 @@ spec:
   selector:
     app: vprodb
     # this is the template label of the vprodb app in the deployment yaml file.
+  type: ClusterIP
