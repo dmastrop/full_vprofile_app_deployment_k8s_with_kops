@@ -31,8 +31,8 @@ spec:
         command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for mydb; sleep 2; done;']
         # only when the vprodb is up will initContainers proceed to create the vproapp tomcat container
         # this creates a dependency for db to be up pror to tomcat coming up.
-
-        - name: init-memcache
+        
+      - name: init-memcache
         image: busybox
         command: ['sh', '-c', 'until nslookup vprocache01; do echo waiting for memcache; sleep 2; done;']
         # only when the memcached is up will initContainers proceed to create the vproapp tomcat container
