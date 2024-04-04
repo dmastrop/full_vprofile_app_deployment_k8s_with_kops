@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: vproapp-service
 spec:
-  selector:
-    app: vproapp
   ports:
   - port: 80
     targetPort: vproapp-port
-    # this is the port 8080 in the vproapp deployment yaml file
     protocol: TCP
+  selector:
+    app: vproapp
   type: LoadBalancer
+
