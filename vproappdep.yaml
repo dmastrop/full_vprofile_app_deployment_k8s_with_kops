@@ -28,13 +28,15 @@ spec:
       initContainers:
       - name: init-mydb
         image: busybox
-        command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for mydb; sleep 2; done;']
+        command: ['sh', '-c', 'until nslookup vprodb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done;']
+        #command: ['sh', '-c', 'until nslookup vprodb; do echo waiting for mydb; sleep 2; done;']
         # only when the vprodb is up will initContainers proceed to create the vproapp tomcat container
         # this creates a dependency for db to be up pror to tomcat coming up.
         
       - name: init-memcache
         image: busybox
-        command: ['sh', '-c', 'until nslookup vprocache01; do echo waiting for memcache; sleep 2; done;']
+        command: ['sh', '-c', 'until nslookup vprocache01.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 2; done;']
+        #command: ['sh', '-c', 'until nslookup vprocache01; do echo waiting for memcache; sleep 2; done;']
         # only when the memcached is up will initContainers proceed to create the vproapp tomcat container
         # this creates a dependency for mecached to be up pror to tomcat coming up.
 
