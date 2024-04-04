@@ -17,7 +17,7 @@ spec:
       containers:
       # this deployment has multiple containers in the pod
       - name: vproapp
-        image: vprofile/vprofileapp:V1
+        image: vprofile/vprofileapp
         # this is a customized image on docker hub
         # best to build my own image using the docker branch
         # Vprofileapp image was created from vproifle-project docker branch
