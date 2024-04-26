@@ -729,6 +729,12 @@ No resources found in default namespace.
 At this point the loadbalancer is deleted
 
 
+kops delete cluster --name=kops-project14.holinessinloveofchrist.com --state=s3:/vprofile-kops-s3-state-project14 --yes
+
+This will delete the db volume
+
+
+
 
 
 
