@@ -428,6 +428,307 @@ rmq-pass:  5 bytes
 ## For subsequent code changes just push the code change to the remote repo above and then do a git pull on the ubnuntu EC2 instance to pull the latest commits
 
 
+## this is ready to deploy. Can first bring up db during troubleshooting and then bring up the rest, but everything can be started at once if desired
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ ls
+ ORIGINAL_k8s_yaml_from_vprofile-project_kube-app_branch   rabbitmq-deployent.yaml
+ README                                                    vproapp-ClusterIP-service.yaml
+ app-secret.yaml                                           vproappdep.yaml
+ memcached-ClusterIP-service.yaml                         'vprodb with comments yaml'
+ memcached-deployment.yaml                                 vprodb-ClusterIP-service-internal.yaml
+ rabbitmq-ClusterIP-service.yaml                           vprodbdep.yaml
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl create -f vprodbdep.yaml 
+deployment.apps/vprodb created
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get deploy
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+vprodb   0/1     1            0           12s
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get deploy
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+vprodb   1/1     1            1           20s
+
+
+
+NAME                      READY   STATUS    RESTARTS   AGE
+vprodb-7cd69b5445-595md   1/1     Running   0          68s
+
+
+
+## NOTE the volume attachment below
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl describe pod vprodb-7cd69b5445-595md
+Name:             vprodb-7cd69b5445-595md
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             i-0ec3eab1e5bb72adb/172.20.39.94
+Start Time:       Fri, 26 Apr 2024 20:46:29 +0000
+Labels:           app=vprodb
+                  pod-template-hash=7cd69b5445
+Annotations:      kubernetes.io/limit-ranger: LimitRanger plugin set: cpu request for container vprodb; cpu request for init container busybox
+Status:           Running
+IP:               100.96.1.6
+IPs:
+  IP:           100.96.1.6
+Controlled By:  ReplicaSet/vprodb-7cd69b5445
+Init Containers:
+  busybox:
+    Container ID:  containerd://3abd779c6d631599a05a542d1bf00d7fac723c11de7084b19626c5e033d03a36
+    Image:         busybox:latest
+    Image ID:      docker.io/library/busybox@sha256:c3839dd800b9eb7603340509769c43e146a74c63dca3045a8e7dc8ee07e53966
+    Port:          <none>
+    Host Port:     <none>
+    Args:
+      rm
+      -rf
+      /var/lib/mysql/lost+found
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Fri, 26 Apr 2024 20:46:36 +0000
+      Finished:     Fri, 26 Apr 2024 20:46:36 +0000
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:        100m
+    Environment:  <none>
+    Mounts:
+      /var/lib/mysql from vpro-db-data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-w9z78 (ro)
+Containers:
+  vprodb:
+    Container ID:   containerd://605f2c94914c229c737c8e14873331f031d558cc4fc20e16a1a6208d362c3dcf
+    Image:          vprofile/vprofiledb:V1
+    Image ID:       docker.io/vprofile/vprofiledb@sha256:56824afd35fabf2fafb028a90fef0e6a5cafb59519f866729be653cbba1e89cd
+    Port:           3306/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 26 Apr 2024 20:46:43 +0000
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:  100m
+    Environment:
+      MYSQL_ROOT_PASSWORD:  <set to the key 'db-pass' in secret 'app-secret'>  Optional: false
+    Mounts:
+      /var/lib/mysql from vpro-db-data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-w9z78 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  vpro-db-data:
+    Type:       AWSElasticBlockStore (a Persistent Disk resource in AWS)   <<<<< NOTE the volumne attachment
+    VolumeID:   vol-01d2206ce52103df9
+    FSType:     ext4
+    Partition:  0
+    ReadOnly:   false
+  kube-api-access-w9z78:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              zone=us-east-1a
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason                  Age   From                     Message
+  ----    ------                  ----  ----                     -------
+  Normal  Scheduled               84s   default-scheduler        Successfully assigned default/vprodb-7cd69b5445-595md to i-0ec3eab1e5bb72adb
+  Normal  SuccessfulAttachVolume  81s   attachdetach-controller  AttachVolume.Attach succeeded for volume "ebs.csi.aws.com-vol-01d2206ce52103df9"
+  Normal  Pulling                 78s   kubelet                  Pulling image "busybox:latest"
+  Normal  Pulled                  77s   kubelet                  Successfully pulled image "busybox:latest" in 494.456141ms (494.46301ms including waiting)
+  Normal  Created                 77s   kubelet                  Created container busybox
+  Normal  Started                 77s   kubelet                  Started container busybox
+  Normal  Pulling                 77s   kubelet                  Pulling image "vprofile/vprofiledb:V1"
+  Normal  Pulled                  70s   kubelet                  Successfully pulled image "vprofile/vprofiledb:V1" in 6.872954992s (6.873016765s including waiting)
+  Normal  Created                 70s   kubelet                  Created container vprodb
+  Normal  Started                 70s   kubelet                  Started container vprodb
+
+
+## Bring up the ClusterIP for the db
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl create -f vprodb-ClusterIP-service-internal.yaml 
+service/vprodb created
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get service
+NAME         TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   100.64.0.1       <none>        443/TCP    112m
+vprodb       ClusterIP   100.65.138.179   <none>        3306/TCP   6s
+
+
+## bring up the rest of the stack (disregard errors below; those resources already started/created)
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl create -f .
+service/vprocache01 created
+deployment.apps/vpromc created
+service/vpromq01 created
+deployment.apps/vpromq01 created
+service/vproapp-service created
+deployment.apps/vproapp created
+Error from server (AlreadyExists): error when creating "app-secret.yaml": secrets "app-secret" already exists
+Error from server (AlreadyExists): error when creating "vprodb-ClusterIP-service-internal.yaml": services "vprodb" already exists
+Error from server (AlreadyExists): error when creating "vprodbdep.yaml": deployments.apps "vprodb" already exists
+
+
+
+## kubectl get the status
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get service
+NAME              TYPE           CLUSTER-IP       EXTERNAL-IP                                                              PORT(S)        AGE
+kubernetes        ClusterIP      100.64.0.1       <none>                                                                   443/TCP        119m
+vproapp-service   LoadBalancer   100.68.104.188   aa89387a9002c4068a3b8760147091ba-283941963.us-east-1.elb.amazonaws.com   80:30902/TCP   74s
+vprocache01       ClusterIP      100.66.4.41      <none>                                                                   11211/TCP      74s
+vprodb            ClusterIP      100.65.138.179   <none>                                                                   3306/TCP       7m26s
+vpromq01          ClusterIP      100.68.145.165   <none>                                                                   15672/TCP      74s
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+vproapp-5d64cd6976-8stj7    1/1     Running   0          79s
+vprodb-7cd69b5445-595md     1/1     Running   0          12m
+vpromc-5c65464866-pmvkt     1/1     Running   0          79s
+vpromq01-69b8ff77dc-m9fm6   1/1     Running   0          79s
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get deploy
+NAME       READY   UP-TO-DATE   AVAILABLE   AGE
+vproapp    1/1     1            1           91s
+vprodb     1/1     1            1           12m
+vpromc     1/1     1            1           91s
+vpromq01   1/1     1            1           91s
+
+
+
+## An Elastic Load Balancer is created for the front end. It is not nginix so it will not show up in the pods under the ingress-nginx namespace
+
+The loadbalancer can be seen with the kubectl describe service vproapp-service
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl describe service vproapp-service
+Name:                     vproapp-service
+Namespace:                default
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=vproapp
+Type:                     LoadBalancer
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       100.68.104.188
+IPs:                      100.68.104.188
+LoadBalancer Ingress:     aa89387a9002c4068a3b8760147091ba-283941963.us-east-1.elb.amazonaws.com
+Port:                     <unset>  80/TCP
+TargetPort:               vproapp-port/TCP
+NodePort:                 <unset>  30902/TCP
+Endpoints:                100.96.1.48:8080
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:
+  Type    Reason                Age   From                Message
+  ----    ------                ----  ----                -------
+  Normal  EnsuringLoadBalancer  21m   service-controller  Ensuring load balancer
+  Normal  EnsuredLoadBalancer   21m   service-controller  Ensured load balancer
+
+
+
+ ## Create an A record in Route53 under the hosted zone for this cluster. Use the DNS name of the loadbalancer.
+
+Route 53 ---> create a Record. Switch to wizard
+Choose simple routing (this is what nginx would normally do)
+Define simple record
+XXXXXXX.holinessinloveofchrist.com
+Use A record
+Alias to Application and Classic LoadBalancer
+Choose region us-east-1
+Choose the loadbalancer that was created from the pulldown
+Create Record
+
+
+This will create the DNS for the frontend loadbalancer above.
+
+
+
+## If get an error in loadbalancer creation this could be because the proper service role has not been created in the AWS account yet. 
+
+Run this in the kops EC2 instance
+
+aws iam create-service-linked-role --aws-service-name "elasticloadbalancing.amazonaws.com"
+
+This will create the service role.
+
+
+
+## The browser should function with the full stack application functionality
+
+xxxxxxx.holinessinloveofchrist.com
+
+
+
+
+
+## commands and cluster DELETE process
+
+kubectl apply OR
+
+Kubectl create -f <>
+Kubectl create -f .
+Kubectl log <pod_name>
+Kubectl get pods
+Kubectl describe pod <>
+Kubectl get service
+Kubectl describe service <>
+
+Kubectl delete -f .
+
+This deletes the ALB loadbalancer but does not delete the db volume. That gets deleted when run kops delete cluster
+
+Note if delete directly with kops it will delete the ALB etc as well.
+Note that the attached volume to the db will be deleted as well.
+
+After kubectl delete -f . do a kops delete cluster
+kops delete cluster --name=kops-project14.holinessinloveofchrist.com --state=s3:/vprofile-kops-s3-state-project14 --yes
+
+
+
+Shut down the EC2 instance.
+
+Does the EBS volume get removed as well?  Yes the volume does get removed. Have to redo it each time from scratch.
+
+
+
+========
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl delete -f .
+secret "app-secret" deleted
+service "vprocache01" deleted
+deployment.apps "vpromc" deleted
+service "vpromq01" deleted
+deployment.apps "vpromq01" deleted
+service "vproapp-service" deleted
+deployment.apps "vproapp" deleted
+service "vprodb" deleted
+deployment.apps "vprodb" deleted
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   100.64.0.1   <none>        443/TCP   155m
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get secret
+No resources found in default namespace.
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get pod
+No resources found in default namespace.
+
+
+At this point the loadbalancer is deleted
+
+
 
 
 
