@@ -643,7 +643,7 @@ Events:
 Route 53 ---> create a Record. Switch to wizard
 Choose simple routing (this is what nginx would normally do)
 Define simple record
-XXXXXXX.holinessinloveofchrist.com
+XXXXXXX.kops-project14.holinessinloveofchrist.com
 Use A record
 Alias to Application and Classic LoadBalancer
 Choose region us-east-1
@@ -667,7 +667,7 @@ This will create the service role.
 
 ## The browser should function with the full stack application functionality
 
-xxxxxxx.holinessinloveofchrist.com
+xxxxxxx.kops-project14.holinessinloveofchrist.com
 
 
 
