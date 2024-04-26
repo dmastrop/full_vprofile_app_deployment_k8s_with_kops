@@ -368,6 +368,66 @@ elasticsearch.node=vprofilenode
 ## Clone the latest entire remote repository for this project to the kops EC2 deployment instance.
 
 First push the latest changes above to the remote repository dmastrop/full_vprofile_app_deployment_k8s_with_kops
+This has the updated volume-id of the EBS store used by the mysql pod
+
+
+ubuntu@ip-172-31-88-11:~$ git clone https://github.com/dmastrop/full_vprofile_app_deployment_k8s_with_kops.git
+Cloning into 'full_vprofile_app_deployment_k8s_with_kops'...
+remote: Enumerating objects: 73, done.
+remote: Counting objects: 100% (73/73), done.
+remote: Compressing objects: 100% (55/55), done.
+remote: Total 73 (delta 32), reused 57 (delta 16), pack-reused 0
+Receiving objects: 100% (73/73), 17.53 KiB | 2.50 MiB/s, done.
+Resolving deltas: 100% (32/32), done.
+ubuntu@ip-172-31-88-11:~$ ls -la
+total 72
+drwxr-x--- 9 ubuntu ubuntu  4096 Apr 26 20:30 .
+drwxr-xr-x 3 root   root    4096 Apr  1 23:15 ..
+drwxrwxr-x 2 ubuntu ubuntu  4096 Apr  2 00:05 .aws
+-rw------- 1 ubuntu ubuntu 12068 Apr 26 03:24 .bash_history
+-rw-r--r-- 1 ubuntu ubuntu   220 Jan  6  2022 .bash_logout
+-rw-r--r-- 1 ubuntu ubuntu  3771 Jan  6  2022 .bashrc
+drwx------ 2 ubuntu ubuntu  4096 Apr  1 23:16 .cache
+drwxr-xr-x 3 ubuntu ubuntu  4096 Apr 26 18:55 .kube
+-rw-r--r-- 1 ubuntu ubuntu   807 Jan  6  2022 .profile
+drwx------ 2 ubuntu ubuntu  4096 Apr 26 19:13 .ssh
+-rw-r--r-- 1 ubuntu ubuntu     0 Apr  2 00:00 .sudo_as_admin_successful
+-rw------- 1 ubuntu ubuntu   925 Apr 26 19:13 .viminfo
+-rw-rw-r-- 1 ubuntu ubuntu   165 Apr  2 00:16 .wget-hsts
+drwxrwxr-x 5 ubuntu ubuntu  4096 Apr 26 20:30 full_vprofile_app_deployment_k8s_with_kops
+drwxrwxr-x 2 ubuntu ubuntu  4096 Apr  2 22:45 full_vprofile_app_deployment_k8s_with_kops_Backup
+drwxrwxr-x 5 ubuntu ubuntu  4096 Apr 26 20:29 full_vprofile_app_deployment_k8s_with_kops_Backup2
+-rw-rw-r-- 1 ubuntu ubuntu    64 Apr  2 00:07 kubectl.sha256
+
+
+
+
+## create the k8s secrets with the app-secret.yaml file
+
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl create -f app-secret.yaml 
+secret/app-secret created
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl get secret
+NAME         TYPE     DATA   AGE
+app-secret   Opaque   2      4s
+
+ubuntu@ip-172-31-88-11:~/full_vprofile_app_deployment_k8s_with_kops$ kubectl describe secret app-secret
+Name:         app-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+db-pass:   10 bytes
+rmq-pass:  5 bytes
+
+
+## For subsequent code changes just push the code change to the remote repo above and then do a git pull on the ubnuntu EC2 instance to pull the latest commits
+
+
 
 
 
